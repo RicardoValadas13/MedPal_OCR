@@ -15,10 +15,13 @@ class Prescriber(BaseModel):
 class PrescriptionItem(BaseModel):
     type: Literal["medication", "physiotherapy"]
     name: str = Field(..., description="Drug name (with strength) or exercise name.")
-    # The action string consumed by the GIF Generation API as its `action` field.
+    # The action prompt consumed by the GIF Generation API as its `action` field.
     description: str = Field(
         ...,
-        description="Short imperative action depicting this item, e.g. 'take this pill'.",
+        description=(
+            "Vivid 1-2 sentence visual instruction used as the image-generation "
+            "prompt; no dosages or numbers."
+        ),
     )
 
     # Medication-specific fields (null for physiotherapy items).

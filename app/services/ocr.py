@@ -14,9 +14,9 @@ _SYSTEM = (
 
 # The output schema is described to the model in plain language so it returns a
 # json_object we can validate with Pydantic. The `description` field is the key
-# output: it must be a short imperative action that the MedPal GIF Generation API
-# can render directly (its `action` field), e.g. "take this pill" or
-# "raise your arm for a shoulder stretch".
+# output: it is fed to the MedPal GIF Generation API as its `action` prompt, so it
+# must be a vivid, self-contained visual instruction that an image generator can
+# depict — not a terse label.
 _INSTRUCTIONS = (
     "Return a JSON object with this exact shape:\n"
     "{\n"
@@ -29,7 +29,7 @@ _INSTRUCTIONS = (
     "    {\n"
     '      "type": "medication" | "physiotherapy",\n'
     '      "name": "<drug name with strength, or exercise name>",\n'
-    '      "description": "<short imperative action depicting this item, in English>",\n'
+    '      "description": "<a vivid 1-2 sentence visual instruction in English, see rules>",\n'
     '      "dosage": string|null, "frequency": string|null, "duration": string|null,\n'
     '      "quantity": string|null, "instructions": string|null,\n'
     '      "sets": integer|null, "reps": integer|null\n'
@@ -38,9 +38,18 @@ _INSTRUCTIONS = (
     '  "warnings": [ "<anything illegible or uncertain>" ]\n'
     "}\n\n"
     "Rules:\n"
-    "- Every item MUST have a `description`: a concise imperative action phrase in "
-    "English suitable for an instructional animation (e.g. \"take this pill\", "
-    "\"apply the cream to the skin\", \"raise your arm for a shoulder stretch\").\n"
+    "- Every item MUST have a `description`: this text is sent directly to an image/"
+    "animation generator, so make it vivid and self-contained (1-2 sentences, in "
+    "English). Describe WHO does WHAT with WHICH object/body part, plus enough "
+    "concrete visual context (posture, where it is placed on the body, how it is "
+    "held or used) for an illustrator to draw it without seeing the prescription. "
+    "Do NOT include dosages, numbers, brand names, or schedule details in it. "
+    "Examples: \"A person sits upright and places a clear oxygen mask over their "
+    "nose and mouth, breathing calmly while a small oxygen concentrator runs beside "
+    "them.\"; \"A person holds a glass of water in one hand and a single pill in the "
+    "other, then places the pill in their mouth and swallows it.\"; \"A person "
+    "slowly raises one arm overhead to stretch the shoulder, keeping the back "
+    "straight.\"\n"
     "- Use `dosage`/`frequency`/`duration`/`quantity`/`instructions` for medications; "
     "leave `sets`/`reps` null for them.\n"
     "- Use `sets`/`reps` for physiotherapy exercises; leave medication fields null.\n"
