@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -12,19 +12,50 @@ class Prescriber(BaseModel):
     name: Optional[str] = None
 
 
-class MedicationSchedule(BaseModel):
+class FixedSchedule(BaseModel):
+    """Used when the prescription specifies exact times (e.g. 'morning and night')."""
+
+    type: Literal["fixed"]
     times: list[str] = Field(
         default_factory=list,
-        description='List of intake times in HH:MM (24h) format, e.g. ["08:00", "20:00"].',
+        description='Intake times in HH:MM (24h) format, e.g. ["08:00", "22:00"].',
     )
     days: list[Literal["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]] = Field(
         default_factory=list,
-        description="Days of the week the medication should be taken.",
+        description="Days of the week the medication must be taken.",
     )
     take_with_food: bool = Field(
         False,
         description="True when the prescription says to take with food or after meals.",
     )
+
+
+class IntervalSchedule(BaseModel):
+    """Used when the prescription specifies a repeating interval (e.g. 'every 8 hours')."""
+
+    type: Literal["interval"]
+    interval_hours: int = Field(
+        ...,
+        description="Number of hours between doses, e.g. 8 for 'de 8 em 8 horas'.",
+    )
+    first_dose: str = Field(
+        "08:00",
+        description="Time of the first dose in HH:MM (24h) format.",
+    )
+    days: list[Literal["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]] = Field(
+        default_factory=list,
+        description="Days of the week the medication must be taken.",
+    )
+    take_with_food: bool = Field(
+        False,
+        description="True when the prescription says to take with food or after meals.",
+    )
+
+
+MedicationSchedule = Annotated[
+    Union[FixedSchedule, IntervalSchedule],
+    Field(discriminator="type"),
+]
 
 
 class PrescriptionItem(BaseModel):
@@ -40,15 +71,14 @@ class PrescriptionItem(BaseModel):
     )
 
     # Medication-specific fields (null for physiotherapy items).
-    dosage: Optional[str] = Field(None, description="Amount per single intake only (e.g. '1 comprimido', '2 pulverizações em cada narina'). Never include frequency or timing.")
-    frequency: Optional[str] = Field(None, description="How often the medication is taken (e.g. '3 vezes por dia', 'de 8 em 8 horas'). Never include the dose amount.")
-    duration: Optional[str] = Field(None, description="Treatment period as written on the prescription (e.g. '5 dias', '1 semana').")
+    dosage: Optional[str] = Field(
+        None,
+        description="Amount per single intake only (e.g. '1 comprimido', '500 mg'). Never include frequency or timing.",
+    )
     duration_days: Optional[int] = Field(
         None,
-        description="Duration expressed as an integer number of days (e.g. 7 for '1 week', 30 for '1 month'). Null if not specified.",
+        description="Treatment duration as an integer number of days (e.g. 7 for '1 week', 30 for '1 month'). Null if not specified.",
     )
-    quantity: Optional[str] = None
-    instructions: Optional[str] = None
     schedule: Optional[MedicationSchedule] = None
 
     # Physiotherapy-specific fields (null for medication items).

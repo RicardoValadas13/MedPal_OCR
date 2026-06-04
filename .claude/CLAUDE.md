@@ -11,7 +11,7 @@ using an OpenAI vision model (`gpt-4o` by default). Part of the MedPal ecosystem
 app/
   main.py          — FastAPI routes + validation (400/413/415/502 error handling)
   models.py        — Pydantic models: PrescriptionResponse, PrescriptionItem,
-                     MedicationSchedule, Patient, Prescriber
+                     FixedSchedule, IntervalSchedule, Patient, Prescriber
   config.py        — Settings via pydantic-settings (OPENAI_API_KEY, OCR_MODEL,
                      MAX_IMAGE_BYTES)
   services/
@@ -23,31 +23,61 @@ app/
 - **Synchronous:** one vision call per request, response returned immediately.
   No job/poll pattern.
 - **Structured schedule output:** every medication item includes a `schedule`
-  object (`times`, `days`, `take_with_food`) derived from the free-text fields,
-  so callers can populate a medication-schedule form directly without extra parsing.
-- **`description` field** is reserved for the MedPal GIF Generation API — it must
+  object that maps directly to the medication form — no extra parsing needed.
+- **Two schedule types** (discriminated union on `type`):
+  - `FixedSchedule` — explicit times, e.g. `["08:00", "20:00"]`
+  - `IntervalSchedule` — repeating interval, e.g. every 8 hours from 08:00
+- **`description` field** is reserved for the MedPal GIF Generation API — must
   be a vivid visual instruction in English, no numbers or dosages.
 - The prompt lives entirely in `ocr.py` (`_SYSTEM` + `_INSTRUCTIONS`). Change
   OCR behaviour by editing those strings, not the models.
 
-## Field separation rules (medication items)
+## PrescriptionItem fields (medications)
 
-| Field         | What it captures                                                                 |
-|---------------|----------------------------------------------------------------------------------|
-| `dosage`      | Amount per single intake — e.g. "1 comprimido", "500 mg"                        |
-| `frequency`   | How often — e.g. "3 vezes por dia", "de 8 em 8 horas"                          |
-| `duration`    | Treatment period as written — e.g. "5 dias", "1 semana"                         |
-| `duration_days` | Duration converted to integer days (7 → "1 semana", 30 → "1 mês")            |
-| `quantity`    | Total units dispensed — e.g. "30 comprimidos", "1 embalagem". Calculated from dosage × frequency × duration if not explicit. |
-| `instructions`| Other notes — e.g. "após as refeições", "ao deitar"                            |
+| Field          | Description                                                              |
+|----------------|--------------------------------------------------------------------------|
+| `name`         | Drug name with strength, e.g. "Ben-u-ron 1000mg"                        |
+| `description`  | Vivid visual instruction → passed as `action` to the GIF API            |
+| `dosage`       | Amount per single intake, e.g. "1 comprimido", "500 mg"                 |
+| `duration_days`| Treatment duration as integer days (7 = 1 week, 30 = 1 month); null if ongoing |
+| `schedule`     | FixedSchedule or IntervalSchedule (see below)                            |
 
-## MedicationSchedule → form field mapping
+## Schedule → form field mapping
 
-| `schedule` field   | Form element                         |
-|--------------------|--------------------------------------|
-| `times`            | `["08:00", "20:00"]` time buttons    |
-| `days`             | `["Mon"…"Sun"]` day toggle buttons   |
-| `take_with_food`   | "Take with food" boolean toggle      |
+### FixedSchedule
+```json
+{
+  "type": "fixed",
+  "times": ["08:00", "20:00"],
+  "days": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+  "take_with_food": false
+}
+```
+| Field           | Form element              |
+|-----------------|---------------------------|
+| `times`         | HH:MM time buttons        |
+| `days`          | Mon–Sun day toggles       |
+| `take_with_food`| "Take with food" toggle   |
+
+### IntervalSchedule
+```json
+{
+  "type": "interval",
+  "interval_hours": 8,
+  "first_dose": "08:00",
+  "days": ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+  "take_with_food": false
+}
+```
+| Field           | Form element                        |
+|-----------------|-------------------------------------|
+| `interval_hours`| "A cada X horas" selector           |
+| `first_dose`    | "Primeira dose" time picker         |
+| `days`          | Mon–Sun day toggles                 |
+| `take_with_food`| "Take with food" toggle             |
+
+Use `IntervalSchedule` when the prescription says "de 8 em 8 horas", "every 6 hours", etc.
+Use `FixedSchedule` for everything else ("twice daily", "morning and night", "3x/day").
 
 ## Sibling services
 
