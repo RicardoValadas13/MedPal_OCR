@@ -30,9 +30,12 @@ _INSTRUCTIONS = (
     '      "type": "medication" | "physiotherapy",\n'
     '      "name": "<drug name with strength, or exercise name>",\n'
     '      "description": "<a vivid 1-2 sentence visual instruction in English, see rules>",\n'
-    '      "dosage": string|null, "frequency": string|null, "duration": string|null,\n'
+    '      "dosage": "<amount per intake only, e.g. \\"1 comprimido\\">|null",\n'
+    '      "frequency": "<how often only, e.g. \\"3 vezes por dia\\">|null",\n'
+    '      "duration": "<treatment period as written, e.g. \\"5 dias\\">|null",\n'
     '      "duration_days": integer|null,\n'
-    '      "quantity": string|null, "instructions": string|null,\n'
+    '      "quantity": string|null,\n'
+    '      "instructions": "<other admin notes, e.g. \\"após as refeições\\">|null",\n'
     '      "schedule": {\n'
     '        "times": ["HH:MM", ...],\n'
     '        "days": ["Mon"|"Tue"|"Wed"|"Thu"|"Fri"|"Sat"|"Sun", ...],\n'
@@ -58,6 +61,14 @@ _INSTRUCTIONS = (
     "straight.\"\n"
     "- Use `dosage`/`frequency`/`duration`/`duration_days`/`quantity`/`instructions` for medications; "
     "leave `sets`/`reps` null for them.\n"
+    "- Field separation rules (never mix these):\n"
+    "  • `dosage`: the amount/quantity taken per single intake ONLY — e.g. \"1 comprimido\", "
+    "\"2 pulverizações em cada narina\", \"500 mg\". Never include how often or when.\n"
+    "  • `frequency`: how often — e.g. \"3 vezes por dia\", \"de 8 em 8 horas\", \"1 vez por dia\". "
+    "Never include the amount taken.\n"
+    "  • `duration`: the treatment period as written — e.g. \"5 dias\", \"1 semana\", \"1 mês\".\n"
+    "  • `instructions`: any other administration notes not captured above — e.g. "
+    "\"após as refeições\", \"ao deitar\", \"se necessário\".\n"
     "- `duration_days`: convert the duration to an integer number of days "
     "(e.g. \"5 days\" → 5, \"1 week\" → 7, \"2 weeks\" → 14, \"1 month\" → 30, "
     "\"3 months\" → 90, \"5 dias\" → 5, \"1 semana\" → 7). Set to null if no duration is stated.\n"

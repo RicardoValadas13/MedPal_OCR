@@ -40,9 +40,9 @@ class PrescriptionItem(BaseModel):
     )
 
     # Medication-specific fields (null for physiotherapy items).
-    dosage: Optional[str] = None
-    frequency: Optional[str] = None
-    duration: Optional[str] = None
+    dosage: Optional[str] = Field(None, description="Amount per single intake only (e.g. '1 comprimido', '2 pulverizações em cada narina'). Never include frequency or timing.")
+    frequency: Optional[str] = Field(None, description="How often the medication is taken (e.g. '3 vezes por dia', 'de 8 em 8 horas'). Never include the dose amount.")
+    duration: Optional[str] = Field(None, description="Treatment period as written on the prescription (e.g. '5 dias', '1 semana').")
     duration_days: Optional[int] = Field(
         None,
         description="Duration expressed as an integer number of days (e.g. 7 for '1 week', 30 for '1 month'). Null if not specified.",
