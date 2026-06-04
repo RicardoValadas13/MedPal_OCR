@@ -30,6 +30,17 @@ app/
 - The prompt lives entirely in `ocr.py` (`_SYSTEM` + `_INSTRUCTIONS`). Change
   OCR behaviour by editing those strings, not the models.
 
+## Field separation rules (medication items)
+
+| Field         | What it captures                                                                 |
+|---------------|----------------------------------------------------------------------------------|
+| `dosage`      | Amount per single intake — e.g. "1 comprimido", "500 mg"                        |
+| `frequency`   | How often — e.g. "3 vezes por dia", "de 8 em 8 horas"                          |
+| `duration`    | Treatment period as written — e.g. "5 dias", "1 semana"                         |
+| `duration_days` | Duration converted to integer days (7 → "1 semana", 30 → "1 mês")            |
+| `quantity`    | Total units dispensed — e.g. "30 comprimidos", "1 embalagem". Calculated from dosage × frequency × duration if not explicit. |
+| `instructions`| Other notes — e.g. "após as refeições", "ao deitar"                            |
+
 ## MedicationSchedule → form field mapping
 
 | `schedule` field   | Form element                         |
