@@ -31,7 +31,13 @@ _INSTRUCTIONS = (
     '      "name": "<drug name with strength, or exercise name>",\n'
     '      "description": "<a vivid 1-2 sentence visual instruction in English, see rules>",\n'
     '      "dosage": string|null, "frequency": string|null, "duration": string|null,\n'
+    '      "duration_days": integer|null,\n'
     '      "quantity": string|null, "instructions": string|null,\n'
+    '      "schedule": {\n'
+    '        "times": ["HH:MM", ...],\n'
+    '        "days": ["Mon"|"Tue"|"Wed"|"Thu"|"Fri"|"Sat"|"Sun", ...],\n'
+    '        "take_with_food": true|false\n'
+    '      } | null,\n'
     '      "sets": integer|null, "reps": integer|null\n'
     "    }\n"
     "  ],\n"
@@ -50,8 +56,24 @@ _INSTRUCTIONS = (
     "other, then places the pill in their mouth and swallows it.\"; \"A person "
     "slowly raises one arm overhead to stretch the shoulder, keeping the back "
     "straight.\"\n"
-    "- Use `dosage`/`frequency`/`duration`/`quantity`/`instructions` for medications; "
+    "- Use `dosage`/`frequency`/`duration`/`duration_days`/`quantity`/`instructions` for medications; "
     "leave `sets`/`reps` null for them.\n"
+    "- `duration_days`: convert the duration to an integer number of days "
+    "(e.g. \"5 days\" → 5, \"1 week\" → 7, \"2 weeks\" → 14, \"1 month\" → 30, "
+    "\"3 months\" → 90, \"5 dias\" → 5, \"1 semana\" → 7). Set to null if no duration is stated.\n"
+    "- For every medication item also populate `schedule`:\n"
+    "  • `times`: list of HH:MM (24-hour) strings inferred from the frequency. "
+    "If the prescription says \"twice daily\" use [\"08:00\",\"20:00\"]; \"3x/day\" → "
+    "[\"08:00\",\"14:00\",\"20:00\"]; \"every 8 hours\" → [\"08:00\",\"16:00\",\"00:00\"]; "
+    "\"once daily\" or \"morning\" → [\"08:00\"]; \"at night\" → [\"22:00\"]. "
+    "If the exact time is written, use it. If truly unknown, use [].\n"
+    "  • `days`: list of day abbreviations the medication must be taken. If the "
+    "prescription says \"daily\" or gives no day restriction, include all seven: "
+    "[\"Mon\",\"Tue\",\"Wed\",\"Thu\",\"Fri\",\"Sat\",\"Sun\"]. Only restrict to fewer "
+    "days when the prescription explicitly states so (e.g. \"weekdays only\" → "
+    "[\"Mon\",\"Tue\",\"Wed\",\"Thu\",\"Fri\"]).\n"
+    "  • `take_with_food`: true if the prescription says \"with food\", \"after meals\", "
+    "\"com alimentos\", or any equivalent; false otherwise.\n"
     "- Use `sets`/`reps` for physiotherapy exercises; leave medication fields null.\n"
     "- `prescription_type` is \"mixed\" only if there are both kinds of items.\n"
     "- Add a short note to `warnings` for anything you could not read confidently.\n"

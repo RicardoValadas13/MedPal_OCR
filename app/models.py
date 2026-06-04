@@ -12,6 +12,21 @@ class Prescriber(BaseModel):
     name: Optional[str] = None
 
 
+class MedicationSchedule(BaseModel):
+    times: list[str] = Field(
+        default_factory=list,
+        description='List of intake times in HH:MM (24h) format, e.g. ["08:00", "20:00"].',
+    )
+    days: list[Literal["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]] = Field(
+        default_factory=list,
+        description="Days of the week the medication should be taken.",
+    )
+    take_with_food: bool = Field(
+        False,
+        description="True when the prescription says to take with food or after meals.",
+    )
+
+
 class PrescriptionItem(BaseModel):
     type: Literal["medication", "physiotherapy"]
     name: str = Field(..., description="Drug name (with strength) or exercise name.")
@@ -28,8 +43,13 @@ class PrescriptionItem(BaseModel):
     dosage: Optional[str] = None
     frequency: Optional[str] = None
     duration: Optional[str] = None
+    duration_days: Optional[int] = Field(
+        None,
+        description="Duration expressed as an integer number of days (e.g. 7 for '1 week', 30 for '1 month'). Null if not specified.",
+    )
     quantity: Optional[str] = None
     instructions: Optional[str] = None
+    schedule: Optional[MedicationSchedule] = None
 
     # Physiotherapy-specific fields (null for medication items).
     sets: Optional[int] = None
